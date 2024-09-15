@@ -1,0 +1,11 @@
+character PLAYER = { The player character.
+
+personality: Dependent on user's choice of dialogue
+
+appearance: Nondescript
+
+background: An outsider to Gensokyo.
+
+age: 19
+
+}
