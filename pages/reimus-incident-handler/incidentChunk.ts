@@ -1,5 +1,63 @@
 import { IncidentChunk } from "../../util/types";
 
+
+// for chunk gen
+// Generate the incident chunks for a more lighthearted comical touhou mission for Reimu/Marisa/Sanae for the following incident based on the type defs:
+// export interface IncidentChunk {
+//   name: string;
+//   location: string;
+//   challenge: string;
+//   enemies?: Person[];
+//   statCheck: statCheck[];
+// }
+
+// export interface Incident {
+//   name: string;
+//   location: string;
+//   sequence: IncidentChunk[];
+
+// export interface statCheck {
+//   category: string;
+//   threshold: number;
+//   over_step: number; // if over threshold, determine extra addition  to total weight
+//   max_over: number;
+//   variance: number;
+//   weight: number;
+// }
+
+
+// interface Spiritual extends Record<string, number> {
+//   mastery: number;
+//   energy: number;
+//   strength: number;
+// }
+
+// interface Danmaku extends Record<string, number> {
+//   accuracy: number;
+//   density: number;
+//   speed: number;
+//   variety: number;
+// }
+
+// interface Skills extends Record<string, number> {
+//   music: number;
+//   cooking: number;
+//   gardening: number;
+//   building: number;
+// }
+
+// interface Personality extends Record<string, number> {
+//   expression: number;
+//   morals: number;
+//   sensitivity: number;
+//   flexibility: number;
+//   sociability: number;
+//   logicality: number;
+//   creativity: number;
+//   pride: number;
+// }
+
+
 export const keineSchool1Chunks: IncidentChunk[] = [{
     name: "Arrival at the School",
     location: "Human Town - School Entrance",

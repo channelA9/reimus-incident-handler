@@ -149,3 +149,26 @@ export const keineK: Person = {
     status: { popularity: 80, money: 30 },
   },
 };
+
+export const humanTowner: Person = {
+  name: "Town Resident",
+  role: "Resident of Human Town",
+  assetID: 1,
+  relations: {},
+  stats: {
+    spiritual: { mastery: 15, energy: 10, strength: 10 },
+    danmaku: { accuracy: 15, density: 10, speed: 10, variety: 10 },
+    skills: { music: 10, cooking: 10, gardening: 15, building: 10 },
+    personality: {
+      expression: 50,
+      morals: 50,
+      sensitivity: 50,
+      flexibility: 50,
+      sociability: 50,
+      logicality: 50,
+      creativity: 50,
+      pride: 50,
+    },
+    status: { popularity: 0, money: 10 },
+  },
+};

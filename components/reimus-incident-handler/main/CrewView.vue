@@ -28,21 +28,14 @@
         <h1 class="text-2xl text-center pt-2">{{ selectedCrew.name }}</h1>
 
         <div class="w-full flex items-center justify-evenly border-y my-2 p-4">
-          <div
+          <StatBar
             v-for="(statVal, statIndex) in selectedCrew.vital"
             :key="`vital-${statIndex}`"
+            :stat-val="statVal"
+            :stat-name="statIndex"
+            :bar-width="100"
             class="text-xs"
-          >
-            <h2>{{ statIndex }}</h2>
-            <div
-              :class="`relative flex ${statVal < 0 ? 'flex-row-reverse' : ''} w-[202px] h-[18px] border border-black`"
-            >
-              <span
-                :style="{ width: `${statVal * 2}px` }"
-                class="fixed h-[16px] bg-black"
-              ></span>
-            </div>
-          </div>
+          />
         </div>
 
         <div class="flex flex-row w-fit m-auto">
@@ -52,25 +45,15 @@
             class="flex flex-col items-start mr-4 last:mr-0"
           >
             <h1>{{ categoryIndex }}</h1>
-            <div
+            <StatBar
               v-for="(statVal, statIndex) in statCategory"
               :key="`${categoryIndex}-${statIndex}`"
+              :bar-width="100"
+              :stat-val="statVal"
+              :stat-name="statIndex"
+              :tiered="true"
               class="text-xs"
-            >
-              <h2>{{ statIndex }}</h2>
-              <div class="flex items-center">
-               
-                <div
-                  :class="`relative flex ${statVal < 0 ? 'flex-row-reverse' : ''} w-[102px] h-[12px] border border-black`"
-                >
-                  <span
-                    :style="{ width: `${statVal}px` }"
-                    class="fixed h-[10px] bg-black"
-                  ></span>
-                </div>
-                <h2 class="ml-1 text-sm font-light">{{ getRank(statVal) }}</h2>
-              </div>
-            </div>
+            />
           </div>
         </div>
 
@@ -110,6 +93,7 @@
 <script setup lang="ts">
 import { defineProps, ref, computed } from "vue";
 import { AssetPack, TeamMember } from "../../../util/types";
+import StatBar from "../sub/StatBar.vue";
 
 const selectedCrew = ref<TeamMember>();
 
@@ -130,20 +114,4 @@ const selectCrew = (crew: TeamMember) => {
 const clearCrew = () => {
   selectedCrew.value = undefined;
 };
-
-const getRank = (val: number) => {
-  switch (Math.floor(val/100)) {
-    case 0: return 'F'
-    case 1: return 'E'
-    case 2: return 'D'
-    case 3: return 'C'
-    case 4: return 'B'
-    case 5: return 'A'
-    case 6: return 'S'
-    case 7: return 'SS'
-    case 8: return 'SSS'
-    case 9: return 'O'
-
-  }
-}
 </script>

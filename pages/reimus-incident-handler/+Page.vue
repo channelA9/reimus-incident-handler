@@ -14,11 +14,14 @@
           :send-message="sendMessage"
           :messages="messages"
           :assets="assetPacks"
-          :disable-a-iinputs="disableAIinputs"
-          :class="dayCycleActive ? 'flex-grow' : ''"
+          :disable-chat-input="disableChatInput"
+          :cutscene-mode="cutsceneMode"
+          :view-stats="currentModifs"
+          :current-speaker="currentSpeaker"
+          class="flex-grow transition-all"
         />
         <div
-          :class="`${dayCycleActive ? 'w-0' : 'w-1/2'} transition-all backdrop-blur-sm overflow-y-clip flex flex-col overflow-clip`"
+          :class="`${cutsceneMode ? 'w-0' : 'w-1/2'} transition-all backdrop-blur-sm overflow-y-clip flex flex-col overflow-clip`"
         >
           <div class="absolute w-full h-full overflow-hidden -z-10">
             <img
@@ -45,27 +48,34 @@
               :assets="assetPacks"
               :schedule-tasks="gameScheduleTaskArray"
               @update-slot="updateTaskSlot"
-            ></SchedulerView>
+            />
             <CrewView
               v-if="menuViewState == 2"
               :team-members="teamMembers"
               :assets="assetPacks"
-            ></CrewView>
+            />
             <CommissionView
               v-else-if="menuViewState == 3"
               :incidents="incidents"
               :assets="assetPacks"
               :team-members="teamMembers"
               @update-incident-assignment="updateIncidentAssignment"
-            ></CommissionView>
-            <PaperView
-              v-else-if="menuViewState == 10"
-              :article="article"
-            ></PaperView>
+            />
+            <MailView
+              v-else-if="menuViewState == 6"
+              :incidents="incidents"
+              :assets="assetPacks"
+              :team-members="teamMembers"
+              @update-incident-assignment="updateIncidentAssignment"
+            />
+            <BudgetView v-else-if="menuViewState == 8" :cash="cash" />
+            <LogView :reports="reports" :assets="assetPacks" v-else-if="menuViewState == 9" />
+
+            <PaperView v-else-if="menuViewState == 10" :article="article" />
           </div>
         </div>
         <div
-          class="w-64 border-2 bg-white border-black text-black overflow-auto flex flex-col"
+          class="w-48 border-2 bg-white border-black text-black overflow-auto flex flex-col"
         >
           <!-- <h2 class="text-xl font-bold mb-4">Team</h2>
       <div v-for="(member, index) in teamMembers" :key="index" class="mb-2">
@@ -109,9 +119,9 @@
             </div>
           </div>
           <button
-            @click="pushDay"
             class="bg-black h-24 w-full flex items-center justify-center"
             :disabled="dayCycleActive"
+            @click="pushDay"
           >
             <h1 class="text-4xl text-white font-light">START WEEK</h1>
           </button>
@@ -163,6 +173,9 @@ import {
   Task,
   PostTask,
   IncidentChunk,
+  PostModif,
+  Report,
+  PerformanceStub
 } from "../../util/types";
 
 import MessageBox from "../../components/reimus-incident-handler/MessageBox.vue";
@@ -170,6 +183,9 @@ import PaperView from "../../components/reimus-incident-handler/main/PaperView.v
 import CrewView from "../../components/reimus-incident-handler/main/CrewView.vue";
 import CommissionView from "../../components/reimus-incident-handler/main/CommissionView.vue";
 import SchedulerView from "../../components/reimus-incident-handler/main/SchedulerView.vue";
+import MailView from "../../components/reimus-incident-handler/main/MailView.vue";
+import BudgetView from "../../components/reimus-incident-handler/main/BudgetView.vue";
+import LogView from "../../components/reimus-incident-handler/main/LogView.vue";
 
 import bigLore from "/assets/lore/biglore.txt?raw";
 
@@ -199,18 +215,23 @@ const incidents = ref<Incident[]>([incidentTags.keineSchool1]);
 const messages = ref<Message[]>([]);
 const article = ref<string>("");
 
-const disableAIinputs = ref<boolean>(true);
+const disableChatInput = ref<boolean>(true);
+const cutsceneMode = ref<boolean>(true);
+
 const currentMinMessage = ref<number>(4);
 const currentGroup = ref<Person[]>([reimuH, marisaK, sanaeK]);
 const currentSpeaker = ref<Person>(reimuH);
 const currentSituation = ref<string>("");
 const currentIntention = ref<string>("");
+const currentModifs = ref<PostModif[]>([]);
+
 // eslint-disable-next-line @typescript-eslint/ban-types
 const completeCall = ref<Function>();
 // Cross-AI/Util
 const cash = ref<number>(15000);
 const solvedIncidents = ref<number>(1);
 const popularity = ref<number>(1);
+const reports = ref<Report[]>([]);
 
 const week = ref<number>(1);
 const day = ref<number>(1);
@@ -225,10 +246,11 @@ const gameMenuViews: Action[] = [
   { name: "Schedule", icon: Clock },
   { name: "Crew", icon: Group },
   { name: "Requests", icon: JapaneseYen },
-  { name: "Tracker", icon: MapPinX },
+  { name: "Map", icon: Map },
+  { name: "Location", icon: MapPinX },
   { name: "Mail", icon: Mail },
   { name: "Store", icon: Store },
-  { name: "Travel", icon: Map },
+  { name: "Budget", icon: Book },
   { name: "Log", icon: Book },
 ];
 
@@ -366,13 +388,13 @@ const groupConversate = async () => {
     conversate(currentSpeaker.value);
   } else {
     console.log("AAAA");
-    disableAIinputs.value = false;
+    disableChatInput.value = false;
   }
 };
 
 const sendMessage = async (input: string): Promise<void> => {
   if (input.trim()) {
-    disableAIinputs.value = true;
+    disableChatInput.value = true;
     const newMessage: Message = {
       sender: user,
       content: input,
@@ -387,7 +409,7 @@ const sendMessage = async (input: string): Promise<void> => {
 
     // this might be needed as a fallback
     // await new Promise((r) => setTimeout(r, 1000));
-    // disableAIinputs.value = false;
+    // disableChatInput.value = false;
   }
 };
 
@@ -698,6 +720,7 @@ const startWeek = () => {
   }, 5000);
 };
 
+
 const iterateRegimen = () => {
   const weekArr: PostTask[][] = [[], [], [], [], [], []];
   // timers for week
@@ -708,82 +731,161 @@ const iterateRegimen = () => {
   // this will replace the "incidents" after the end the cycle
   const updatedIncidents: Incident[] = [];
 
+  // for final reports
+  let revenue = 0;
+  let expenses = 0;
+  const teamMemberPerformanceArray: PerformanceStub[] = []
+
   // for each character, calculate their task results first
   teamMembers.value.forEach((member, _) => {
+    teamMemberPerformanceArray.push({teamMember: member, days: []})
+    const record = teamMemberPerformanceArray[teamMemberPerformanceArray.length-1]
+
     member.dayTasks.forEach((taskId, dayIndex) => {
+      const memberFirstName = member.name.split(" ")[0];
       if (taskId != -1) {
         const taskCont = gameScheduleTaskArray[taskId];
-        let failChance = taskCont.baseFail;
-        let critChance = taskCont.baseCrit;
-        // adjust final crit and fail by relevant skills
-        taskCont.chanceModifs.forEach((modif, _) => {
-          const modifKey = modif.category.split(".");
-          const charStatMatch =
-            modifKey[0] == "vital"
-              ? member.vital[modifKey[1]]
-              : member.stats[modifKey[0]][modifKey[1]];
-          if (charStatMatch >= modif.cutoffs[3]) {
-            critChance += 4;
-            failChance -= 5;
-          } else if (charStatMatch >= modif.cutoffs[2]) {
-            critChance += 1;
-            failChance -= 2;
-          } else if (charStatMatch <= modif.cutoffs[0]) {
-            critChance -= 4;
-            failChance += 5;
-          } else if (charStatMatch <= modif.cutoffs[1]) {
-            critChance -= 1;
-            failChance += 2;
+
+        const viewModifs: PostModif[] = [];
+        let taskDesc = `${memberFirstName} couldn't do ${taskCont.name} due to a lack of money!`;
+        let successF = false;
+        let critF = false;
+        // check if meets the rest/health minimums in a cycle so that we can change the task if a fail
+        // rather than using else statements here, we can just set the taskdefs depending on situation if there is a fail anywhere
+        if (cash.value >= taskCont.cost.money) {
+          taskDesc = `${memberFirstName} is too weak to do ${taskCont.name}!`;
+          if (member.vital.health >= taskCont.cost.health) {
+
+            // add to viewModif so it can be seen on each task view
+            if (taskCont.cost.health != 0)
+              viewModifs.push({
+                statName: "health",
+                initialVal: member.vital.health,
+                changeVal: -taskCont.cost.health,
+              });
+
+            taskDesc = `${memberFirstName} is too tired to do ${taskCont.name}!`;
+            if (member.vital.rest >= taskCont.cost.rest) {
+
+              // add to viewModif so it can be seen on each task view
+            if (taskCont.cost.rest != 0)
+              viewModifs.push({
+                statName: "health",
+                initialVal: member.vital.rest,
+                changeVal: -taskCont.cost.rest,
+              });
+
+              // subtract all costs
+              member.vital.health -= taskCont.cost.health;
+              member.vital.rest -= taskCont.cost.rest;
+              cash.value -= taskCont.cost.money;
+              expenses +=  taskCont.cost.money;
+
+              let failChance = taskCont.baseFail;
+              let critChance = taskCont.baseCrit;
+              // adjust final crit and fail by relevant skills
+              taskCont.chanceModifs.forEach((modif, _) => {
+                const modifKey = modif.category.split(".");
+                const charStatMatch =
+                  modifKey[0] == "vital"
+                    ? member.vital[modifKey[1]]
+                    : member.stats[modifKey[0]][modifKey[1]];
+                if (charStatMatch >= modif.cutoffs[3]) {
+                  critChance += 4;
+                  failChance -= 5;
+                } else if (charStatMatch >= modif.cutoffs[2]) {
+                  critChance += 1;
+                  failChance -= 2;
+                } else if (charStatMatch <= modif.cutoffs[0]) {
+                  critChance -= 4;
+                  failChance += 5;
+                } else if (charStatMatch <= modif.cutoffs[1]) {
+                  critChance -= 1;
+                  failChance += 2;
+                }
+              });
+
+              const success =
+                Math.round(Math.random() * 100) > failChance ? true : false;
+              const crit =
+                Math.round(Math.random() * 100) <= critChance ? true : false;
+
+              // can't quickly think of one for this
+              let v = 2;
+              if (success) {
+                if (crit) v = 3;
+              } else {
+                v = 1;
+                if (crit) v = 0;
+              }
+              // select a description from one of the many
+              const taskStatusDescs = taskCont.descs[v];
+              // determine modifs, add to char bucket
+              const valCategory = success
+                ? crit
+                  ? "crit_success"
+                  : "success"
+                : crit
+                  ? "crit_fail"
+                  : "fail";
+
+              // stat calc collective
+
+              taskCont.statModifs.forEach((modifer, _) => {
+                // add traits modifs to character stats
+                const category = modifer.category;
+                const statAdjustValue = modifer[valCategory];
+                let modifName = "";
+                let preStat = cash.value;
+                console.log(`PRE: ${preStat}`);
+                if (category == "money") {
+                  // potentially adjust this later to increment money value in time with the timeouts
+                  modifName = "Yen";
+                  cash.value += statAdjustValue;
+                  revenue += statAdjustValue;
+
+                } else {
+                  const cat = category.split(".");
+
+                  // preStat is purely for passing to viewModifs
+                  preStat =
+                    cat[0] == "vital"
+                      ? member.vital[cat[1]]
+                      : member.stats[cat[0]][cat[1]];
+                  modifName = cat[1];
+
+                  if (cat[0] == "vital")
+                    member.vital[cat[1]] += statAdjustValue;
+                  else member.stats[cat[0]][cat[1]] += statAdjustValue;
+                }
+                console.log(`POST: ${preStat + statAdjustValue}`);
+                viewModifs.push({
+                  statName: modifName,
+                  initialVal: preStat,
+                  changeVal: statAdjustValue,
+                });
+              });
+
+              taskDesc = taskStatusDescs[
+                randomInteger(0, taskStatusDescs.length - 1)
+              ].replace("CHAR", memberFirstName);
+
+              successF = success;
+              critF = crit;
+            }
           }
-        });
-
-        const success =
-          Math.round(Math.random() * 100) > failChance ? true : false;
-        const crit =
-          Math.round(Math.random() * 100) <= critChance ? true : false;
-
-        // can't quickly think of one for this
-        let v = 2;
-        if (success) {
-          if (crit) v = 3;
-        } else {
-          v = 1;
-          if (crit) v = 0;
         }
-        // select a description from one of the many
-        const taskStatusDescs = taskCont.descs[v];
-        // determine modifs, add to char bucket
-        const valCategory = success
-          ? crit
-            ? "crit_success"
-            : "success"
-          : crit
-            ? "crit_fail"
-            : "fail";
-
-        // stat calc collective
-
-        taskCont.statModifs.forEach((modifer, _) => {
-          // add traits modifs to character stats
-
-          const category = modifer.category;
-          const statAdjustValue = modifer[valCategory];
-          const cat = category.split(".");
-
-          cat[0] == "vital"
-            ? (member.vital[cat[1]] += statAdjustValue)
-            : (member.stats[cat[0]][cat[1]] += statAdjustValue);
-        });
 
         // push task into the day chat string for the week
-        weekArr[dayIndex].push({
-          desc: taskStatusDescs[
-            randomInteger(0, taskStatusDescs.length - 1)
-          ].replace("CHAR", member.name.split(" ")[0]),
+        const postTaskObj: PostTask = {
+          desc: taskDesc,
           person: member,
-          success: success,
-          crit: crit,
-        });
+          success: successF,
+          crit: critF,
+          postModifs: viewModifs,
+        }
+        weekArr[dayIndex].push(postTaskObj);
+        record.days.push(postTaskObj);
       }
     });
   });
@@ -793,19 +895,33 @@ const iterateRegimen = () => {
 
   weekArr.forEach((dayActionsArray, dayIndex) => {
     // string is offset to day 2, since day 1 of each week is the planning day
-    pushMessage(system, `Day ${dayIndex + 2}`, dayOffsetter);
+    setTimeout(() => {
+      pushMessage(system, `Day ${dayIndex + 2}`);
+      cutsceneMode.value = true;
+    }, dayOffsetter);
+
     dayActionsArray.forEach((actionObj, i) => {
-      pushMessage(
-        system,
-        `${actionObj.desc}`,
+      setTimeout(
+        () => {
+          pushMessage(system, `${actionObj.desc}`);
+          currentSpeaker.value = actionObj.person
+          currentModifs.value = actionObj.postModifs;
+        },
         dayOffsetter + (i + 1) * timePerAction
       );
     });
     setTimeout(() => {
       day.value += 1;
+      currentSpeaker.value = system
+      currentModifs.value = [];
     }, dayOffsetter);
     dayOffsetter += timePerAction * dayActionsArray.length + intermissionTime;
   });
+
+  // clear out all the modif systems
+  setTimeout(() => {
+    currentModifs.value = [];
+  }, dayOffsetter);
 
   // handle the incidents (oh my god the logic spam)
 
@@ -900,11 +1016,11 @@ const iterateRegimen = () => {
         setTimeout(
           () => {
             pushMessage(system, `${incidentSequence.challenge}`);
-            aiActiveCrewSequenceDialog(
-              involvedMembers,
-              incidentSequence.challenge,
-              outcomeDesc
-            );
+            // aiActiveCrewSequenceDialog(
+            //   involvedMembers,
+            //   incidentSequence.challenge,
+            //   outcomeDesc
+            // );
           },
           dayOffsetter +
             timePerSequence * (sequenceIndex + 1) * involvedMembers.length +
@@ -936,6 +1052,8 @@ const iterateRegimen = () => {
     if (incidentWin) {
       setTimeout(() => {
         cash.value += incident.pay;
+        revenue +=  incident.pay;
+
         popularity.value += incident.reputation;
         pushMessage(
           system,
@@ -950,10 +1068,7 @@ const iterateRegimen = () => {
       }
     } else {
       setTimeout(() => {
-        pushMessage(
-          system,
-          `-${incident.reputation} reputation`
-        );
+        pushMessage(system, `-${incident.reputation} reputation`);
         popularity.value -= Math.floor(incident.reputation / 2);
       }, dayOffsetter);
 
@@ -973,18 +1088,34 @@ const iterateRegimen = () => {
 
     dayOffsetter += intermissionTime;
 
-    setTimeout(() => {
+  });
+
+  // post-week fixed expense
+  cash.value -= 2000
+  expenses += 2000
+
+
+  // push the report, now that incidents AND tasks have been handled
+  reports.value.push({
+    week: week.value,
+    earning: revenue,
+    losses: expenses,
+    weekPerformance: teamMemberPerformanceArray
+  })
+
+  // final
+  setTimeout(() => {
       messages.value = [];
       pushMessage(
         system,
         `Week ${week.value} has concluded. Time to prepare for the next week!`
       );
 
-      disableAIinputs.value = false;
+      disableChatInput.value = false;
+      cutsceneMode.value = false;
       
       day.value = 1;
     }, dayOffsetter);
-  });
 
   // final
   setTimeout(() => {
@@ -1015,7 +1146,7 @@ const getAsset = (assetID: number) => {
 const pushDay = () => {
   if (!dayCycleActive.value) {
     dayCycleActive.value = true;
-    disableAIinputs.value = true;
+    disableChatInput.value = true;
     startWeek();
   }
 };
@@ -1049,6 +1180,9 @@ const updateIncidentAssignment = (incidentIndex: number, charIndex: number) => {
 /// EVENTS
 
 const initSequence = () => {
+  disableChatInput.value = true;
+  dayCycleActive.value = false;
+  cutsceneMode.value = true;
   currentSpeaker.value = reimuH;
   currentIntention.value =
     "Get the newcomer to agree to a business deal wherein he will create and handle a dispatch business that organizes incident handlers and deals with commissions from the local Human Village and across Gensokyo.";
@@ -1068,7 +1202,8 @@ const initSequence = () => {
     6000
   );
   setTimeout(() => {
-    disableAIinputs.value = false;
+    disableChatInput.value = false;
+    cutsceneMode.value = false;
   }, 6100);
 };
 
@@ -1102,8 +1237,8 @@ const firstArticle = () => {
     4000
   );
   setTimeout(() => {
-    dayCycleActive.value = false;
     messages.value = [];
+    dayCycleActive.value = false;
   }, 10100);
   pushMessage(
     system,
@@ -1112,7 +1247,12 @@ const firstArticle = () => {
   );
   pushMessage(reimuH, "Okay. Now that we've got everything set up...", 12000);
   pushMessage(system, "Reimu looks at you eagerly.", 13000);
-  pushMessage(reimuH, "Are you interested in a tutorial?", 15000);
+  pushMessage(reimuH, "Go ahead figure the rest out.", 15000);
+
+  setTimeout(() => {
+    disableChatInput.value = false;
+    cutsceneMode.value = false;
+  }, 15000);
 };
 </script>
 

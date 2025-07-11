@@ -90,10 +90,17 @@ export interface StatModif {
   crit_success: number;
 }
 
+export interface PostModif {
+  statName: string;
+  initialVal: number;
+  changeVal: number;
+}
+
 export interface Task {
   name: string;
   descs: string[][];
   icon: FunctionalComponent;
+  cost: costCheck;
   chanceModifs: ChanceModif[];
   statModifs: StatModif[];
   baseFail: number;
@@ -105,6 +112,7 @@ export interface PostTask {
   person: TeamMember;
   success: boolean;
   crit: boolean;
+  postModifs: PostModif[];
 }
 
 export interface Review {
@@ -120,6 +128,12 @@ export interface Message {
 export interface AssetPack {
   icon: string;
   lore: string;
+}
+
+export interface costCheck {
+  money: number;
+  rest: number;
+  health: number;
 }
 
 export interface statCheck {
@@ -145,6 +159,7 @@ export interface Incident {
   sequence: IncidentChunk[];
   power: number;
   context: string;
+  cost?: costCheck;
   request_head: string;
   request_desc: string;
   requester: Person;
@@ -159,6 +174,18 @@ export interface Incident {
   unlockOnFail?: Incident[];
   unlockOnSuccess?: Incident[];
   unlockOnIgnore?: Incident[];
+}
+
+export interface PerformanceStub {
+  teamMember: TeamMember;
+  days: PostTask[];
+}
+
+export interface Report {
+  week: number;
+  earning: number;
+  losses: number;
+  weekPerformance: PerformanceStub[];
 }
 
 export interface Action {

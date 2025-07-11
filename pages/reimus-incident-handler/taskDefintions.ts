@@ -42,6 +42,11 @@ const trainTask: Task = {
       crit_success: 5,
     },
   ],
+  cost: {
+    money: 0,
+    rest: 0,
+    health: 0,
+  },
   baseFail: 10,
   baseCrit: 5,
 };
@@ -77,6 +82,11 @@ const restTask: Task = {
       crit_success: 15,
     },
   ],
+  cost: {
+    money: 0,
+    rest: 0,
+    health: 0,
+  },
   baseFail: 5,
   baseCrit: 10,
 };
@@ -116,6 +126,11 @@ const meditateTask: Task = {
       crit_success: 5,
     },
   ],
+  cost: {
+    money: 0,
+    rest: 0,
+    health: 0,
+  },
   baseFail: 10,
   baseCrit: 5,
 };
@@ -124,7 +139,7 @@ const workTask: Task = {
   name: "Work",
   icon: Briefcase,
   descs: [
-    [`CHAR was run out of town while trying to sell stuff.`],
+    [`CHAR was run out of town while trying to sell stuff.`, `CHAR broke some stuff and had to pay for repairs.`],
     [`CHAR couldn't find any willing patrons.`],
     ['CHAR did some work and earned some money.'],
     ['CHAR made a killing!']
@@ -145,13 +160,18 @@ const workTask: Task = {
   ],
   statModifs: [
     {
-      category: "status.money",
-      crit_fail: -3,
+      category: "money",
+      crit_fail: -150,
       fail: 0,
-      success: 1,
-      crit_success: 3,
+      success: 100,
+      crit_success: 300,
     },
   ],
+  cost: {
+    money: 0,
+    rest: 5,
+    health: 1,
+  },
   baseFail: 15,
   baseCrit: 3,
 };
